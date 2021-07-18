@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
+import argparse
+from enum import Enum, auto
 from pathlib import Path
 from shutil import which
-from enum import Enum, auto
-
 
 # Change if necessary
 FISH_FUNCTIONS_PATH = Path().home() / ".config" / "fish" / "functions"
@@ -19,19 +19,9 @@ find_cmds = {
     FindCommand.FIND: {"name": "find", "command": 'find $path -iname "*$pat*"'},
 }
 
-# Edit this accordign to your preferences
-FIND_COMMAND = FindCommand.FIND
-
 # Edit this list according to to your preferences.
 # Executables not found in your PATH will be skipped
-COMMANDS = [
-    "cat",
-    "chmod",
-    "gvim",
-    "ls",
-    "vi",
-    "vim",
-]
+COMMANDS = ["cat", "chmod", "gvim", "ls", "vi", "vim", "grep", "rg"]
 
 
 def get_command_template_for(find_cmd: FindCommand, **kargs) -> str:
@@ -67,20 +57,24 @@ def get_command_template_for(find_cmd: FindCommand, **kargs) -> str:
     echo Running "{cmd} $files"
     {cmd} $args $files
     return 0
-end
-    """.format(
+end""".format(
         find_command=find_command, name=name, **kargs
     )
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Create find/fd-find fish function wrappers")
+    parser.add_argument("--fd", action="store_true")
+    args = vars(parser.parse_args())
+
+    find_cmd = FindCommand.FD_FIND if args["fd"] is True else FindCommand.FIND
     for cmd in COMMANDS:
         if not which(cmd):
             print(f'Cannot find executable "{cmd}", skipping command registration')
             continue
 
         output = FISH_FUNCTIONS_PATH / f"{cmd}F.fish"
-        conts = get_command_template_for(cmd=cmd, find_cmd=FIND_COMMAND)
+        conts = get_command_template_for(cmd=cmd, find_cmd=find_cmd)
         if output.is_dir():
             raise IsADirectoryError("{output} is a directory ?!")
         elif output.is_file():

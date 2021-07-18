@@ -16,6 +16,8 @@ COMMANDS = [
     "ls",
     "vi",
     "vim",
+    "grep",
+    "rg"
 ]
 
 
@@ -64,7 +66,7 @@ complete -c {cmd}W -a "(complete -C (printf %s\\n (commandline -ot)))" -x
             mode = "CREATE"
 
         with output.open("w") as f:
-            print(f"[{mode}]\t{cmd} -> {output}")
+            print(f"[{mode}]\t{cmd}\t-> {output}")
             f.write(conts)
 
 
