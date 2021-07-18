@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+
+from pathlib import Path
+from shutil import which
+from enum import Enum, auto
+
+
+# Change if necessary
+FISH_FUNCTIONS_PATH = Path().home() / ".config" / "fish" / "functions"
+
+
+class FindCommand(Enum):
+    FIND = auto()
+    FD_FIND = auto()
+
+
+find_cmds = {
+    FindCommand.FD_FIND: {"name": "fd", "command": 'fd -i "$pat" $path'},
+    FindCommand.FIND: {"name": "find", "command": 'find $path -iname "*$pat*"'},
+}
+
+# Edit this accordign to your preferences
+FIND_COMMAND = FindCommand.FIND
+
+# Edit this list according to to your preferences.
+# Executables not found in your PATH will be skipped
+COMMANDS = [
+    "cat",
+    "chmod",
+    "gvim",
+    "ls",
+    "vi",
+    "vim",
+]
+
+
+def get_command_template_for(find_cmd: FindCommand, **kargs) -> str:
+    name = find_cmds[find_cmd]["name"]
+    find_command = find_cmds[find_cmd]["command"]
+
+    return """function {cmd}F -d "Run {name} and pass the resulting executable(s) to {cmd}."
+    # All but the last two arguments are passed to "{cmd}" itself.
+    set argc (count $argv)
+    set cmd (status current-command)
+    set args
+    if test $argc -eq 0; or test $argc -eq 1
+        printf "I need at least 2 argument.\nUSAGE: {cmd}F [flags-of-{cmd}] <{name}-pattern> <path-to-search>
+"
+        return 1
+    end
+
+    if test $argc -eq 2
+        set args
+    else
+        set args $argv[1..-3]
+    end
+
+    set pat "$argv[-2]"
+    set path "$argv[-1]"
+    set files ({find_command})
+
+    if test -z "$files"
+        printf "No files found by {name}"
+        return 1
+    end
+
+    echo Running "{cmd} $files"
+    {cmd} $args $files
+    return 0
+end
+    """.format(
+        find_command=find_command, name=name, **kargs
+    )
+
+
+def main():
+    for cmd in COMMANDS:
+        if not which(cmd):
+            print(f'Cannot find executable "{cmd}", skipping command registration')
+            continue
+
+        output = FISH_FUNCTIONS_PATH / f"{cmd}F.fish"
+        conts = get_command_template_for(cmd=cmd, find_cmd=FIND_COMMAND)
+        if output.is_dir():
+            raise IsADirectoryError("{output} is a directory ?!")
+        elif output.is_file():
+            mode = "OVERWRITE"
+        else:
+            mode = "CREATE"
+
+        with output.open("w") as f:
+            print(f"[{mode}]\t{cmd}\t-> {output}")
+            f.write(conts)
+
+
+if __name__ == "__main__":
+    main()

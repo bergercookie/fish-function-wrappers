@@ -1,20 +1,32 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
+from shutil import which
 
 
 # Change if necessary
 FISH_FUNCTIONS_PATH = Path().home() / ".config" / "fish" / "functions"
 
+# Edit this list according to to your preferences.
+# Executables not found in your PATH will be skipped
+COMMANDS = [
+    "cat",
+    "chmod",
+    "gvim",
+    "ls",
+    "vi",
+    "vim",
+]
+
 
 def main():
-    template = """function {cmd}W -d "Run {cmd}W and pass the result to which so that you open the executable directly"
-    # All the arguments except the last one are passed to {cmd} itself.
+    template = """function {cmd}W -d "Run which and pass the resulting executable(s) to {cmd}."
+    # All but the last argument are passed to "{cmd}" itself.
     set argc (count $argv)
     set cmd (status current-command)
     set args
     if test $argc -eq 0
-        printf "I need at least 1 argument.\nUSAGE: $cmd [flags-of-command] <name-of-executable>\n"
+        printf "I need at least 1 argument.\\nUSAGE: $cmd [flags-of-command] <name-of-executable>\n"
         return 1
     else if test $argc -eq 1
         set args (which $argv)
@@ -33,15 +45,15 @@ def main():
     {cmd} $args
     return 0
 end
-"""
-    commands = [
-        "cat",
-        "ls",
-        "vim",
-        "chmod",
-    ]
 
-    for cmd in commands:
+# tab completion - based on which
+complete -c {cmd}W -a "(complete -C (printf %s\\n (commandline -ot)))" -x
+"""
+    for cmd in COMMANDS:
+        if not which(cmd):
+            print(f'Cannot find executable "{cmd}", skipping command registration')
+            continue
+
         output = FISH_FUNCTIONS_PATH / f"{cmd}W.fish"
         conts = template.format(cmd=cmd)
         if output.is_dir():
@@ -51,9 +63,8 @@ end
         else:
             mode = "CREATE"
 
-        print(f"[{mode}]\t{cmd} -> {output}")
-
-        with open(output, "w") as f:
+        with output.open("w") as f:
+            print(f"[{mode}]\t{cmd} -> {output}")
             f.write(conts)
 
 
