@@ -1,0 +1,18 @@
+name: Basic CI
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - name: Check which script
+        run: mkdir -p ~/.config/fish/functions && ./create-which-wrappers.py && ls ~/.config/fish/functions/*
+      - name: Check find script - fd-find
+        run: mkdir -p ~/.config/fish/functions && ./create-find-wrappers.py && ls ~/.config/fish/functions/*
+      - name: Check find script - fd-find
+        run: mkdir -p ~/.config/fish/functions && ./create-find-wrappers.py --fd && ls ~/.config/fish/functions/*

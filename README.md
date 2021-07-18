@@ -1,6 +1,6 @@
 # Function Wrappers for Fish
 
-![badge](https://img.shields.io/badge/fish--shell-fish--function--wrappers-blueviolet)
+![badge](https://img.shields.io/badge/fish--shell-fish--function--wrappers-blueviolet) [![CI](https://github.com/bergercookie/fish-function-wrappers/actions/workflows/ci.yml/badge.svg)](https://github.com/bergercookie/fish-function-wrappers/actions/workflows/ci.yml)
 
 Python scripts for generating useful wrapper functions for commonly executed
 UNIX executables for the [Fish shell](https://fishshell.com/).
