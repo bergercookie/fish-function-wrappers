@@ -91,6 +91,21 @@ complete -c catW -a "(complete -C (printf %s\n (commandline -ot)))" -x
 
 </p></details>
 
+## `type -pa` Wrappers
+
+Generate wrapper functions for executables or fish functions so that you don't
+have to type out the following:
+
+```sh
+vim (type -p a-function.fish)
+```
+
+Instead, you can now run:
+
+```sh
+vimT a-function.fish
+```
+
 ## `which` Wrappers
 
 Generate wrapper functions for commands so that you don't have to type out the

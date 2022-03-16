@@ -10,18 +10,21 @@ FISH_FUNCTIONS_PATH = Path().home() / ".config" / "fish" / "functions"
 
 
 class FindCommand(Enum):
-    FIND = auto()
+    FD = auto()
     FD_FIND = auto()
+    FIND = auto()
 
 
 find_cmds = {
-    FindCommand.FD_FIND: {"name": "fd", "command": 'fd -i "$pat" $path'},
+    FindCommand.FD: {"name": "fdfind", "command": 'fd -i "$pat" $path'},
+    FindCommand.FD_FIND: {"name": "fdfind", "command": 'fdfind -i "$pat" $path'},
     FindCommand.FIND: {"name": "find", "command": 'find $path -iname "*$pat*"'},
 }
 
 # Edit this list according to to your preferences.
 # Executables not found in your PATH will be skipped
-COMMANDS = ["cat", "chmod", "gvim", "ls", "vi", "vim", "grep", "rg"]
+COMMANDS = ["cat", "chmod", "gnvim", "gvim", "ls", "vi", "vim", "grep", "rg", "rm", "lddtree",
+            "ldd", "file"]
 
 
 def get_command_template_for(find_cmd: FindCommand, **kargs) -> str:
@@ -63,11 +66,19 @@ end""".format(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Create find/fd-find fish function wrappers")
-    parser.add_argument("--fd", action="store_true")
-    args = vars(parser.parse_args())
+    argparse.ArgumentParser(description="Create find/fd-find fish function wrappers")
 
-    find_cmd = FindCommand.FD_FIND if args["fd"] is True else FindCommand.FIND
+    # if `fd-find` is installed use that, otherwise use vanilla `find`.
+    # fdfind may be named either fd or fdfind, depending on the distro.
+    if which("fdfind"):
+        find_cmd = FindCommand.FD_FIND
+    elif which("fd"):
+        find_cmd = FindCommand.FD
+    else:
+        print("fd-find not found, using vanilla find command.")
+        find_cmd = FindCommand.FIND
+
+    print("[create-find-wrappers.py:76] DEBUGGING STRING ==> ", 3)
     for cmd in COMMANDS:
         if not which(cmd):
             print(f'Cannot find executable "{cmd}", skipping command registration')
